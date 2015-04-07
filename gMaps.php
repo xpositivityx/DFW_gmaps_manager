@@ -21,6 +21,7 @@ function enqueue_resources(){
 	wp_enqueue_style('maps_style', plugins_url('/css/gMaps.css' , __FILE__));
 	wp_enqueue_script('g-maps', "https://maps.googleapis.com/maps/api/js?key=AIzaSyC5MyIFc2Tyz1V_pkPp7thkSUa9xBfomws");
 	wp_enqueue_script('maps_function', plugin_dir_url(__FILE__) . 'js/maps.js');
+	wp_localize_script('maps_function', 'jsMap', add_markers());
 }
 
 add_action('wp_enqueue_scripts', 'enqueue_resources');
@@ -36,9 +37,6 @@ function generate_map($atts){
 		</div>
 		<div id='map-canvas'>
 		</div>
-		<script> 
-				<?php print add_markers() ?>
-		</script>
 	</div>
 	<?php
 	$result = ob_get_contents();
@@ -109,16 +107,14 @@ function get_all_addresses(){
 function add_markers() {
 	global $wpdb;
 	$addresses = get_all_addresses();
-	ob_start();
+	$output = array();
 	foreach($addresses as $a){
 		$esc_name = addslashes($a->name);
 		$esc_phone = addslashes($a->phone_number);
 		$esc_web = addslashes($a->website);
 		$ad = "$a->street_address. $a->city,$a->state";
-		echo "google.maps.event.addDomListener(window, 'load', setTimeout(function(){ codeAddress( $a->lat, $a->lng, '$esc_name', '$esc_phone', '$esc_web', '$ad' ) }, 1000));";
+		array_push($output, "$a->lat, $a->lng, '$esc_name', '$esc_phone', '$esc_web', '$ad'");
 	}
-	$output = ob_get_contents();
-	ob_end_clean();
 	return $output;
 }
 

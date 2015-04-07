@@ -18,18 +18,36 @@ function initialize() {
       windows[i].close();
     }
   });
+  for(var i = 0; i<jsMap.length; i++){
+    !function outer(i){
+      google.maps.event.addListenerOnce(map, 'idle', function inner(e){
+        codeAddress(jsMap[i]);
+      });
+    }(i);
+  }
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
 
-function codeAddress(lat1, lng1, name, phone, web, address){
-  map.setCenter({lat: lat1, lng: lng1});
+
+function codeAddress(address){
+  var properties = ['lat1', 'lng1', 'name', 'phone', 'web', 'address'];
+  address = address.split(',');
+  var mapKey = new Array();
+  address.map(function(val, i){
+    if(i<2){
+      mapKey[properties[i]] = Number(val);
+    } else{
+      mapKey[properties[i]] = val;
+    }
+  });
+  map.setCenter({lat: mapKey['lat1'], lng: mapKey['lng1']});
   var content = '<div id="content">'+
-      '<h1 id="firstHeading" class="firstHeading">' + name + '</h1>'+
+      '<h1 id="firstHeading" class="firstHeading">' + mapKey['name'] + '</h1>'+
       '<div id="bodyContent">'+
-      '<p>' + phone + '</p>'+
-      '<p>' + address + '</p>' +
-      '<p>Website: <a href="http://' + web + '">'+ web +
+      '<p>' + mapKey['phone'] + '</p>'+
+      '<p>' + mapKey['address'] + '</p>' +
+      '<p>Website: <a href="http://' + mapKey['web'] + '">'+ mapKey['web'] +
       '</a>'+
       '</p>'+
       '</div>'+
@@ -42,9 +60,9 @@ function codeAddress(lat1, lng1, name, phone, web, address){
 
   var marker = new google.maps.Marker({
         map: map,
-        position: {lat: lat1, lng: lng1},
+        position: {lat: mapKey['lat1'], lng: mapKey['lng1']},
         icon : image_url,
-        title: name
+        title: mapKey['name']
       });
 
   markers.push(marker);
