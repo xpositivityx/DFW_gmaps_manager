@@ -131,18 +131,3 @@ function find_closest_marker() {
   });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
