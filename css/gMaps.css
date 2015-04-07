@@ -1,0 +1,41 @@
+#map-canvas { 
+	height: 400px;
+	width:100%; 
+	margin: 0; 
+	padding: 0;
+}
+
+.map h3 {
+	text-align:center;
+}
+
+#submit {
+	margin-top:20px;
+}
+
+div .address-list{
+	display:inline-block;
+	width:66%;
+}
+
+div .formwrapper{
+	display:inline-block;
+	float:left;
+	width:20%;
+}
+
+div .formwrapper input{
+	width:90%;
+}
+
+.zip {
+	z-index: 100;
+	display: inline-block;
+	padding-bottom:0px;
+	margin-bottom:0px;
+}
+
+div .map-search{
+	float:left;
+	clear:both;
+}
