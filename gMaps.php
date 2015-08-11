@@ -27,7 +27,7 @@ function enqueue_resources(){
 add_action('wp_enqueue_scripts', 'enqueue_resources');
 add_action('admin_enqueue_scripts', 'enqueue_resources');
 
-function generate_map($atts){
+function generate_map($atts=null){
 	ob_start();?>
 	<div class='map'>
 		<div class="map-search">
@@ -47,8 +47,32 @@ function generate_map($atts){
 add_shortcode('gmap', 'generate_map');
 
 function dashboard_menu(){
-	add_menu_page('gMaps', 'gMaps', 'manage_options', 'gMaps', 'my_plugin_options');
+	add_menu_page('gMaps', 'Distributor Manager', 'manage_options', 'gMaps', 'my_plugin_options');
 
+}
+
+add_action('wp_ajax_gmaps_search', 'gmaps_search');
+
+function gmaps_search(){
+	$term = $_POST['term'];
+	$result = gmaps_search_address($term);
+	$json = json_encode($result);
+	header('Content-type : json');
+	echo $json;
+	die();
+}
+
+add_action('wp_ajax_paginate', 'paginate');
+
+function paginate(){
+	global $wpdb;
+	$offset = $_POST['offset'];
+	$limit = $_POST['limit'];
+	$results = get_all_addresses($limit, $offset);
+	$json = json_encode($results);
+	header('Content-type : json');
+	echo $json;
+	die();
 }
 
 function my_plugin_options() {
@@ -57,11 +81,14 @@ function my_plugin_options() {
 	}
 
 	?>
-
+	<div class="heading">
+		<h2>Distributor Manager</h2>
+	</div>
 	<div class="formwrapper"> 
 	<form action= '<?php print admin_url() ?>admin-post.php' method = 'post'>
 	<input type='hidden' name='action' value='add_address'>
-	<h3>Add A New Marker</h3>
+	<input id='mode' type="hidden" name='mode' value='save'>
+	<h3>Add A New Distributor</h3>
 	<p>Name:</p>
 	<input type=text id = 'name' name='name' required> <br>
 	<p>Phone Number:</p>
@@ -79,15 +106,38 @@ function my_plugin_options() {
 	</div>
 
 	<?php $addresses = get_all_addresses(); ?>
+	<?php $total = get_address_count();?>
 	<div class = 'address-list'>
+		<div id="gmaps-search">
+			<input type="text" id="filter">
+			<button id='gmaps_search'>Search</button>
+		</div>
 	<?php
 	$counter = 0;
+	$limit = 2;
+	?>
+	<div id="pagination">
+	<?php
+	if ($total >= $limit){
+		echo "<a href='#' class='pagination' onclick='paginate(0)'>Prev</a>";
+		for($i=0; $i < ($total / $limit); $i++){
+			if($i == 0){
+				echo "<p class='pagination'>" . ($i + 1) . "</p>";
+			}else{
+				echo "<a href='#' class='pagination' onclick='paginate(" . ( $i * $limit ) . ")'>" . ($i + 1) . "</a>";
+			}
+		}
+		echo "<a href='#' class='pagination' onclick=paginate(" . $limit . ")>Next</a>";
+	}
+	?>
+	</div>
+	<?php
 	foreach ($addresses as $address){
 		echo "
 		<div class = 'address_listing'>
-		<p><span id='name_listing$counter'>$address->name</span>: <span id='street_listing$counter'>$address->street_address</span>. <span id='city_listing$counter'>$address->city</span>, <span id='state_listing$counter'>$address->state</span>.
-		:: <span id='phone_listing$counter'>$address->phone_number</span> :: <span id='web_listing$counter'>$address->website</span></p>
-		<a href='" . admin_url() . "admin-post.php?action=remove_address&name=" . $address->name . "'>remove</a> :: <a href = '#' onclick='set_form($counter)'>update</a>
+		<p><span class='name' id='name_listing$counter'>$address->name</span><span class='street' id='street_listing$counter'>$address->street_address</span><span class='city' id='city_listing$counter'>$address->city</span><span class='state' id='state_listing$counter'>$address->state</span>
+	  <span class='phone' id='phone_listing$counter'>$address->phone_number</span><span class='web' id='web_listing$counter'><a href='$address->website'>$address->website</a></span></p>
+		<a href='" . admin_url() . "admin-post.php?action=remove_address&name=" . $address->name . "'>remove</a><a href = '#' onclick='set_form($counter)'>update</a>
 		</div>";
 		++$counter;
 	}
@@ -96,17 +146,29 @@ function my_plugin_options() {
 	<?php
 }
 
-function get_all_addresses(){
+function get_all_addresses($limit = 2, $offset = 0){
 	global $wpdb;
 	$table_name = $wpdb->base_prefix . 'gMaps';
 	$results = $wpdb->get_results(
-		"SELECT * FROM $table_name");
+		"SELECT * FROM $table_name 
+		ORDER BY Name ASC
+		LIMIT $limit 
+		OFFSET $offset");
 	return $results;
+}
+
+function get_address_count(){
+	global $wpdb;
+	$table_name = $wpdb->base_prefix . 'gMaps';
+	$results = $wpdb->get_results(
+		"SELECT COUNT(*) FROM $table_name");
+	$results = get_object_vars($results[0]);
+	return $results['COUNT(*)'];
 }
 
 function add_markers() {
 	global $wpdb;
-	$addresses = get_all_addresses();
+	$addresses = get_all_addresses(1000);
 	$output = array();
 	foreach($addresses as $a){
 		$esc_name = addslashes($a->name);
@@ -132,12 +194,14 @@ function add_address(){
 	$condition_sql = "SELECT name FROM $table_name
 										WHERE street_address = '$street';
 										";
-	if ($wpdb->query($condition_sql) > 0 ){
+	if ($_POST['mode'] == 'update'){
 		$sql = "UPDATE $table_name
 						SET name='$name', street_address='$street',
-						city='$city',state='$state'
+						city='$city',state='$state', phone_number='$phone', website='$web'
 						WHERE street_address='$street'
-						OR phone_number='$phone';";
+						OR phone_number='$phone'
+						OR name = '$name'
+						OR website = '$web'";
 		$wpdb->query($sql);
 	}
 	else {
@@ -182,6 +246,21 @@ function remove_address(){
 }
 
 add_action('admin_post_remove_address', 'remove_address');
+
+function gmaps_search_address($term){
+	global $wpdb;
+	$data = array();
+	$table_name = $wpdb->base_prefix . 'gMaps';
+	$sql = "
+		SELECT * FROM $table_name
+		WHERE name LIKE '%$term%' OR
+		street_address LIKE '%$term%' OR
+		city LIKE '%$term%' OR
+		state LIKE '%$term%';
+	";
+	$result = $wpdb->get_results($sql, OBJECT);
+	return $result;
+}
 
 function jal_install(){
 	global $wpdb;

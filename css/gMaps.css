@@ -10,18 +10,31 @@
 }
 
 #submit {
+	display: inline-block;
+	background: #00A0CB;
+	width: auto;
+	height: inherit;
 	margin-top:20px;
+	padding: 6px 16px;
+	border: none;
+	color: white;
+	cursor: pointer;
+	-webkit-appearance: none;
+}
+
+#submit:hover {
+	background: black;
 }
 
 div .address-list{
 	display:inline-block;
-	width:66%;
+	width:50%;
 }
 
 div .formwrapper{
 	display:inline-block;
 	float:left;
-	width:20%;
+	width:40%;
 }
 
 div .formwrapper input{
@@ -38,4 +51,127 @@ div .formwrapper input{
 div .map-search{
 	float:left;
 	clear:both;
+}
+
+div.heading > *,
+div.sub > * {
+	display:inline;
+}
+
+div.sub {
+	width:50%;
+}
+
+div.sub:first-of-type{
+	float:left;
+}
+
+.pagination {
+	margin-right:10px;
+	display:inline;
+}
+
+div#gmaps-search{
+	float:right;
+}
+
+div#pagination{
+	clear:both;
+}
+
+div.heading{
+	margin-top: 15px;
+	margin-bottom:10px;
+}
+
+
+/** DASHBOARD **/
+
+.heading h2 {
+    margin: 15px auto 0;
+    padding: 0;
+    line-height: 1;
+    font-size: 34px;
+    margin-left: -4px;
+}
+
+.address_listing .city,
+.address_listing .state,
+.address_listing .zip {
+    display: inline-block;
+    text-transform: capitalize;
+}
+
+.address_listing .city::after {
+    content: ",";
+    margin-right: 4px;
+}
+
+.address_listing .state {
+    margin-right: 4px;
+}
+
+.address_listing .web a {
+    background: none;
+    color: #009CD7;
+    padding: 0;
+    text-transform: inherit;
+}
+
+.address_listing .web a:hover {
+	background: none;
+	color: red;
+}
+
+.address_listing .name {
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.address_listing {
+    padding: 0 0 20px;
+    border-bottom: 1px dotted silver;
+}
+
+.address_listing p span {
+    display: block;
+}
+
+.address_listing #state_listing0 {
+    display: inline-block;
+}
+
+.address_listing a {
+	background: silver;
+	color: white;
+	padding: 2px 8px;
+	margin-right: 10px;
+	text-decoration: none;
+	text-transform: uppercase;
+	box-shadow: none!important;
+}
+
+.address_listing a:hover {
+	background: black;
+}
+
+
+@media only screen and (max-width: 750px){
+	div.formwrapper{
+		width:100%;
+	}
+
+	div.address-list{
+		width:90%;
+		margin-top:20px;
+	}
+
+	input[type=text]{
+		padding:0;
+	}
+}
+
+.alignleft{
+	display:flex;
 }
